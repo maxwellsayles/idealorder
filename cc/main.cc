@@ -14,8 +14,22 @@
 
 #include "ideal.h"
 #include "string_integer.h"
+#include "util.h"
 
 using namespace std;
+
+const int multipliers[] = {1, 2, 3, 5, 6, 7, 10};
+
+/// Return the ideal file associated with i-bits.
+string idealFilename(const int i) {
+  stringstream ss;
+  //    if (i % 8 == 0) {
+  ss << "/home/max/Desktop/masters/ideals/ideal-" << i << ".txt";
+  //    } else {
+  //  ss << "../ideals-small-sample/ideal-" << i << ".txt";
+  //    }
+  return ss.str();
+}
 
 /// Group the list by Ideal::n and then call map on the group.
 template<class T, class F, class Iter>
@@ -66,6 +80,7 @@ void group2Map(Iter iter, Iter end,
 }
 
 
+/// Filters the input list by multiplier k.
 void filterByMultiplier(const int k, const list<Ideal>& ideals,
 			list<Ideal>& output) {
   output.clear();
@@ -77,21 +92,21 @@ void filterByMultiplier(const int k, const list<Ideal>& ideals,
 /// Returns the number of elements that needed to be added to src
 /// so that dst is a subset of src.
 template<class Iter1, class Iter2>
-int similarity(Iter1 src, Iter1 srcend,
+int difference(Iter1 src, Iter1 srcend,
 	       Iter2 dst, Iter2 dstend,
 	       const int acc = 0) {
   if (dst == dstend) return acc;
-  if (src == srcend) return similarity(src, srcend, ++dst, dstend, acc+1);
-  if (*src > *dst) return similarity(src, srcend, ++dst, dstend, acc+1);
-  if (*src < *dst) return similarity(++src, srcend, dst, dstend, acc);
-  return similarity(++src, srcend, ++dst, dstend, acc);
+  if (src == srcend) return difference(src, srcend, ++dst, dstend, acc+1);
+  if (*src > *dst) return difference(src, srcend, ++dst, dstend, acc+1);
+  if (*src < *dst) return difference(++src, srcend, dst, dstend, acc);
+  return difference(++src, srcend, ++dst, dstend, acc);
 }
 
-/// Returns the average similarity between any two elements in the group.
+/// Returns the average difference between the factors of any two ideals.
 /// The idea is to assume that we know the factors of one ideal and compute
 /// how many factors we need to add to know the factorization of some
 /// other ideal.
-double groupSimilarity(const vector<Ideal>& group) {
+double avgDifference(const vector<Ideal>& group) {
   int n = group.size();
 
   vector<vector<StringInteger>::const_iterator> starts;
@@ -108,7 +123,7 @@ double groupSimilarity(const vector<Ideal>& group) {
     for (int j = 0; j < n; j++) {
       if (i != j) {
 	count ++;
-	res += similarity(starts[i], group[i].factors.cend(),
+	res += difference(starts[i], group[i].factors.cend(),
 			  starts[j], group[j].factors.cend());
       }
     }
@@ -118,17 +133,31 @@ double groupSimilarity(const vector<Ideal>& group) {
   return res / (n * n - n);
 }
 
-template<class R, class Iter>
-R average(Iter iter, Iter end) {
-  R sum = 0;
-  R count = 0;
-  for (; iter != end; ++iter) {
-    sum += *iter;
-    count ++;
+int maxDifference(const vector<Ideal>& group) {
+  int n = group.size();
+  vector<vector<StringInteger>::const_iterator> starts;
+  for (int i = 0; i < n; i++) {
+    starts.push_back(upper_bound(group[i].factors.cbegin(),
+				 group[i].factors.cend(),
+				 StringInteger(7)));
   }
-  return sum / count;
+  assert(starts.size() == group.size());
+
+  int res = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      if (i != j) {
+	int s = difference(starts[i], group[i].factors.cend(),
+			   starts[j], group[j].factors.cend());
+	if (s > res) res = s;
+      }
+    }
+  }
+  return res;
 }
 
+/// True if 3^a, 5^b, 7^c, and 11^d are <= t for a, b, c, d occuring
+/// in the factorization of the order and if x^e has e <= 1 for all x > 11.
 bool validFactors(const vector<StringInteger>& factors, const int t) {
   int threes = 1;
   int fives = 1;
@@ -146,25 +175,17 @@ bool validFactors(const vector<StringInteger>& factors, const int t) {
   return threes <= t && fives <= t && sevens <= t;
 }
 
-template<class Iter>
-double idealsRatio(Iter first, Iter last, const int t) {
-  double c1 = 0;
-  double c2 = 0;
+/// Compute the number of ideals where the factorization of its order
+/// does not violate validFactors() above.
+template<class R, class Iter>
+R idealsRatio(Iter first, Iter last, const int t) {
+  R c1 = 0;
+  R c2 = 0;
   for (; first != last; first++) {
     c1 ++;
     if (validFactors(first->factors, t)) c2 ++;
   }
   return c2 / c1;
-}
-
-string idealFilename(const int i) {
-  stringstream ss;
-  //    if (i % 8 == 0) {
-  //  ss << "ideal-" << i << ".txt";
-  //    } else {
-  ss << "../ideals-small-sample/ideal-" << i << ".txt";
-  //    }
-  return ss.str();  
 }
 
 // Computes the probability that the order has no prime power
@@ -183,18 +204,17 @@ vector<double> probWithPower(const int i) {
   // Compute ratio for each target
   for (int i = 0; i < 8; i++) {
     int target = targets[i];
-    double ratio = idealsRatio(ideals.begin(), ideals.end(), target);
+    double ratio = idealsRatio<double>(ideals.begin(), ideals.end(),
+				       target);
     cout << "Ratio after culling for target " << target
 	 << ": " << ratio << endl;
 
-    /*
     stringstream outfile;
     outfile << "results-" << target << ".txt";
     ofstream out;
     out.open(outfile.str().c_str(), ios_base::out | ios_base::app);
     out << fixed << setprecision(5) << i << ", " << ratio << endl;
     out.close();
-    */
     
     sums[i] += ratio;
   }
@@ -213,47 +233,28 @@ void runProbWithPower() {
   }
 }
 
-StringInteger maxFactor(const vector<Ideal>& group) {
-  StringInteger res;
-  for (const Ideal& ideal : group) {
-    const vector<StringInteger>& factors = ideal.factors;
-    if (!factors.empty()) {
-      StringInteger x = factors[factors.size()-1];
-      if (x > res) res = x;
-    }
-  }
-  return res;
-}
+void runSimilarity() {
+  for (int i = 32; i <= 80; i += 8) {
+    string filename = idealFilename(i);
+    list<Ideal> ideals;
+    loadIdeals(filename, ideals);
 
-const int multipliers[] = {1, 2, 3, 5, 6, 7, 10};
+    list<double> results;
+    group2Map(ideals.begin(), ideals.end(), avgDifference, results);
+    cout << i << ", "
+	 << average<double>(results.begin(), results.end()) << endl;
+    //    group2Map(ideals.begin(), ideals.end(), maxDifference, results);
+    //    cout << i << ", "
+    //	 << *max_element(results.begin(), results.end()) << endl;
+  }
+}
 
 int main(int argc, char** argv) {
   struct rlimit l = {7*1024ULL*1024ULL*1024ULL, 7*1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
   //  runProbWithPower();
-
-  for (int i = 32; i <= 80; i += 1) {
-    string filename = idealFilename(i);
-    //    cout << "Processing file \"" << filename << "\"" << endl;
-    list<Ideal> ideals;
-    loadIdeals(filename, ideals);
-
-    list<double> results;
-    group2Map(ideals.begin(), ideals.end(), groupSimilarity, results);
-    cout << i << ", "
-	 << average<double>(results.begin(), results.end()) << endl;
-    /*
-    for (int k : multipliers) {
-      list<Ideal> ideals2;
-      filterByMultiplier(k, ideals, ideals2);
-      list<double> results;
-      groupMap(ideals2.begin(), ideals2.end(), groupSimilarity, results);
-      cout << i << ", "
-	   << average<double>(results.begin(), results.end()) << endl;
-    }
-    */
-  }
+  runSimilarity();
 
   return 0;
 }

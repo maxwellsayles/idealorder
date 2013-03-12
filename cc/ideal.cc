@@ -11,27 +11,27 @@
 
 using namespace std;
 
-/// Read [1,2,3,4]
-vector<StringInteger> parseList(istream& stream) {
-  vector<StringInteger> res;
+/// Read a list, e.g. [1,2,3,4].
+istream& operator>>(istream& stream, vector<StringInteger>& res) {
+  res.clear();
   string tmp;
   char c;
   if (!(stream >> c)) {
-    return res;
+    return stream;
   }
   assert(c == '[');
   while (stream >> c && c != ']') {
     if (c == ',') {
       res.push_back(tmp);
       tmp = "";
-    } else {
+    } else if (c != ' ') {
       tmp += c;
     }
   }
   if (tmp != "") {
     res.push_back(tmp);
   }
-  return res;
+  return stream;
 }
 
 istream& operator>>(istream& stream, Ideal& ideal) {
@@ -39,10 +39,8 @@ istream& operator>>(istream& stream, Ideal& ideal) {
   stream >> ideal.k;
   stream >> ideal.p;
   stream >> ideal.order;
-  int i;
-  stream >> i;
-  ideal.success = i == 1;
-  ideal.factors = parseList(stream);
+  stream >> ideal.success;
+  stream >> ideal.factors;
   return stream;
 }
 
