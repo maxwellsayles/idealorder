@@ -17,6 +17,22 @@ struct DifferenceHistogram {
   int total;
 };
 
+/// Assume both sequences are sorted in ascending order.
+/// Returns the number of elements that needed to be added to src
+/// so that dst is a subset of src.
+/// NOTE: Tail recursion optimization makes this non-recursive.
+template<class Iter1, class Iter2>
+inline int difference(Iter1 src, Iter1 srcend,
+		      Iter2 dst, Iter2 dstend,
+		      const int acc = 0) {
+  if (dst == dstend) return acc;
+  if (src == srcend) return difference(src, srcend, ++dst, dstend, acc+1);
+  if (*src > *dst) return difference(src, srcend, ++dst, dstend, acc+1);
+  if (*src < *dst) return difference(++src, srcend, dst, dstend, acc);
+  return difference(++src, srcend, ++dst, dstend, acc);
+}
+
+
 /// Returns the average difference between the factors of any two ideals.
 /// The idea is to assume that we know the factors of one ideal and compute
 /// how many factors we need to add to know the factorization of some
