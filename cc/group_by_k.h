@@ -13,7 +13,6 @@ class GroupByKIterator_ {
  private:
   Iter end_;
   Iter iter_;
-  //  std::vector<Ideal> group_;
   PushBackContainer group_;
   int last_k_;
 
@@ -52,7 +51,6 @@ class GroupByKIterator_ {
     return iter_ != that.iter_;
   }
 
-  //  const std::vector<Ideal>& operator*() const {
   const PushBackContainer& operator*() const {
     return group_;
   }
