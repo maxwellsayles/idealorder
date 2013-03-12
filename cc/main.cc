@@ -14,10 +14,14 @@
 
 #include "ideal.h"
 #include "difference.h"
+#include "group_by_k.h"
 #include "string_integer.h"
 #include "util.h"
 
 using namespace std;
+
+typedef GroupByK<vector<Ideal>, list<Ideal>::const_iterator>
+    ideal_list_group;
 
 const int multipliers[] = {1, 2, 3, 5, 6, 7, 10};
 
@@ -31,83 +35,6 @@ string idealFilename(const int i) {
   //    }
   return ss.str();
 }
-
-/// Group the list by Ideal::n and then call map on the group.
-template<class T, class F, class Iter>
-void groupMap(Iter iter, Iter end,
-	      F f,
-	      list<T>& out) {
-  out.clear();
-  vector<Ideal> group;
-  StringInteger last;
-  for (; iter != end; ++iter) {
-    if (iter->n != last) {
-      if (!group.empty()) {
-	out.push_back(f(group));
-      }
-      group.clear();
-      last = iter->n;
-    }
-    group.push_back(*iter);
-  }
-  if (!group.empty()) {
-    out.push_back(f(group));
-  }
-}
-
-/// Group the list by Ideal::n and Ideal::k and then call map on the group.
-template<class T, class F, class Iter>
-void group2Map(Iter iter, Iter end,
-	       F f,
-	       list<T>& out) {
-  out.clear();
-  vector<Ideal> group;
-  StringInteger last_n;
-  int last_k = 0;
-  for (; iter != end; ++iter) {
-    if (iter->n != last_n || iter->k != last_k) {
-      if (!group.empty()) {
-	out.push_back(f(group));
-      }
-      group.clear();
-      last_n = iter->n;
-      last_k = iter->k;
-    }
-    group.push_back(*iter);
-  }
-  if (!group.empty()) {
-    out.push_back(f(group));
-  }
-}
-
-/// Fold-left after grouping the list by Ideal::n and Ideal::k.
-/// The combine function takes the accumulator and
-/// a vector of ideals for each group.
-template<class R, class F, class Iter>
-void group2Foldl(Iter iter, Iter end, R& acc, F combine) {
-  //  R acc = z0;
-  vector<Ideal> group;
-  StringInteger last_n;
-  int last_k = 0;
-  for (; iter != end; ++iter) {
-    if (iter->k != last_k) {
-      if (!group.empty()) {
-	//	acc = combine(acc, group);
-	combine(acc, group);
-      }
-      group.clear();
-      last_n = iter->n;
-      last_k = iter->k;
-    }
-    group.push_back(*iter);
-  }
-  if (!group.empty()) {
-    //    acc = combine(acc, group);
-    combine(acc, group);
-  }
-  //  return acc;
-}
-		 
 
 /// Filters the input list by multiplier k.
 void filterByMultiplier(const int k, const list<Ideal>& ideals,
@@ -201,18 +128,11 @@ void runSimilarity() {
     list<Ideal> ideals;
     loadIdeals(filename, ideals);
 
-    //    list<double> results;
-    //    group2Map(ideals.begin(), ideals.end(), avgDifference, results);
-    //    cout << i << ", "
-    //	 << average<double>(results.begin(), results.end()) << endl;
-
-    //    group2Map(ideals.begin(), ideals.end(), maxDifference, results);
-    //    cout << i << ", "
-    //	 << *max_element(results.begin(), results.end()) << endl;
-
     DifferenceHistogram hist;
-    group2Foldl(ideals.begin(), ideals.end(), hist, histogramCombine);
-    cout << "i : ";
+    ideal_list_group group(ideals.cbegin(), ideals.cend());
+    hist = accumulate(group.cbegin(), group.cend(),
+		      hist, histogramCombine);
+    cout << i << " : ";
     cout << fixed << setprecision(5);
     for (int i = 0; i < 5; i ++) {
       double d = static_cast<double>(hist.diff_count[i]) /
