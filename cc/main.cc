@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <sys/resource.h>
 
+#include "attempts.h"
 #include "ideal.h"
 #include "difference.h"
 #include "group_by_k.h"
@@ -28,26 +29,6 @@ void filterByMultiplier(const int k, const list<Ideal>& ideals,
   output.clear();
   copy_if(ideals.begin(), ideals.end(), back_inserter(output),
 	  [k](const Ideal& ideal) { return ideal.k == k; });
-}
-
-
-/// True if 3^a, 5^b, 7^c, and 11^d are <= t for a, b, c, d occuring
-/// in the factorization of the order and if x^e has e <= 1 for all x > 11.
-bool validFactors(const vector<StringInteger>& factors, const int t) {
-  int threes = 1;
-  int fives = 1;
-  int sevens = 1;
-  int elevens = 1;
-  StringInteger last = 0;
-  for (const StringInteger& x : factors) {
-    if (x == 3) threes *= 3;
-    else if (x == 5) fives *= 5;
-    else if (x == 7) sevens *= 7;
-    else if (x == 11) elevens *= 11;
-    else if (x != 2 && x == last) return false;
-    last = x;
-  }
-  return threes <= t && fives <= t && sevens <= t;
 }
 
 /// Compute the number of ideals where the factorization of its order
@@ -68,7 +49,7 @@ R idealsRatio(Iter first, Iter last, const int t) {
 vector<double> probWithPower(const int i) {
   vector<double> sums(8, 0);
   const int targets[] = {1, 9, 25, 27, 49, 81, 121, 125};
-  string filename = idealFilename(i);
+  string filename = bigIdealFilename(i);
   cout << "Processing file \"" << filename << "\"" << endl;
   cout << fixed << setprecision(5);
 
@@ -108,34 +89,14 @@ void runProbWithPower() {
   }
 }
 
-void runDifference() {
-  for (int i = 32; i <= 80; i += 8) {
-    string filename = idealFilename(i);
-    list<Ideal> ideals;
-    loadIdeals(filename, ideals);
-
-    DifferenceHistogram hist;
-    ideal_list_group group(ideals.cbegin(), ideals.cend());
-    hist = accumulate(group.cbegin(), group.cend(),
-		      hist, histogramCombine);
-    cout << i << " : ";
-    cout << fixed << setprecision(5);
-    for (int i = 0; i < 5; i ++) {
-      double d = static_cast<double>(hist.diff_count[i]) /
-                     static_cast<double>(hist.total);
-      cout << 100*d << ' ';
-    }
-    cout << endl;
-  }
-}
-
 int main(int argc, char** argv) {
   // Make sure the program doesn't go too crazy!
   struct rlimit l = {7*1024ULL*1024ULL*1024ULL, 7*1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
   //  runProbWithPower();
-  runDifference();
+  //  runDifference();
+  runAttempts();
 
   return 0;
 }

@@ -73,6 +73,18 @@ class StringInteger {
     return i;
   }
 
+  /// Compute i mod 4.  We represent i = \sum c*10^x
+  /// and 10 mod 4 = 2, so that's \sum c*2^x \pmod 4.
+  int mod4() const {
+    int res = 0;
+    for (char c : i) {
+      res <<= 1;
+      res += c - '0';
+      res &= 3;
+    }
+    return res;
+  }
+
  private:
   std::string i;
 };

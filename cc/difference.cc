@@ -1,14 +1,23 @@
 #include "difference.h"
 
 #include <algorithm>
+#include <iomanip>
+#include <iostream>
 #include <vector>
 
 #include <assert.h>
 
+#include "group_by_k.h"
+#include "ideal.h"
 #include "string_integer.h"
+#include "util.h"
 
 using namespace std;
 
+/// Returns the average difference between the factors of any two ideals.
+/// The idea is to assume that we know the factors of one ideal and compute
+/// how many factors we need to add to know the factorization of some
+/// other ideal.
 double avgDifference(const vector<Ideal>& group) {
   int n = group.size();
 
@@ -61,7 +70,23 @@ int maxDifference(const vector<Ideal>& group) {
   return res;
 }
 
+/// Represents a histogram of the differences between the factorization
+/// of orders.
+struct DifferenceHistogram {
+  DifferenceHistogram() {
+    diff_count[0] = 0;
+    diff_count[1] = 0;
+    diff_count[2] = 0;
+    diff_count[3] = 0;
+    diff_count[4] = 0;
+    total = 0;
+  }
+  int diff_count[5];
+  int total;
+};
 
+/// Combine function for a fold counting the difference between ideals.
+/// NOTE: Modifies the accumulator in place.
 DifferenceHistogram& histogramCombine(DifferenceHistogram& hist,
 				      const std::vector<Ideal>& group) {
   int n = group.size();
@@ -84,4 +109,25 @@ DifferenceHistogram& histogramCombine(DifferenceHistogram& hist,
     }
   }
   return hist;
+}
+
+void runDifference() {
+  for (int i = 32; i <= 80; i += 8) {
+    string filename = bigIdealFilename(i);
+    list<Ideal> ideals;
+    loadIdeals(filename, ideals);
+
+    DifferenceHistogram hist;
+    ideal_list_group group(ideals.cbegin(), ideals.cend());
+    hist = accumulate(group.cbegin(), group.cend(),
+		      hist, histogramCombine);
+    cout << i << " : ";
+    cout << fixed << setprecision(5);
+    for (int i = 0; i < 5; i ++) {
+      double d = static_cast<double>(hist.diff_count[i]) /
+                     static_cast<double>(hist.total);
+      cout << 100*d << ' ';
+    }
+    cout << endl;
+  }
 }
