@@ -1,3 +1,5 @@
+from glob import glob
+
 Program(target='main',
-	source=['main.cc', 'ideal.cc'],
+	source=glob('*.cc'),
 	CPPFLAGS=['-O3', '-std=c++11', '-Wall', '-Werror'])

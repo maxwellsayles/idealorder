@@ -13,6 +13,7 @@
 #include <sys/resource.h>
 
 #include "ideal.h"
+#include "difference.h"
 #include "string_integer.h"
 #include "util.h"
 
@@ -79,6 +80,32 @@ void group2Map(Iter iter, Iter end,
   }
 }
 
+/// Fold-left after grouping the list by Ideal::n and Ideal::k.
+/// The combine function takes the accumulator and
+/// a vector of ideals for each group.
+template<class R, class F, class Iter>
+R group2Foldl(Iter iter, Iter end, R z0, F combine) {
+  R acc = z0;
+  vector<Ideal> group;
+  StringInteger last_n;
+  int last_k = 0;
+  for (; iter != end; ++iter) {
+    if (iter->n != last_n || iter->k != last_k) {
+      if (!group.empty()) {
+	acc = combine(acc, group);
+      }
+      group.clear();
+      last_n = iter->n;
+      last_k = iter->k;
+    }
+    group.push_back(*iter);
+  }
+  if (!group.empty()) {
+    acc = combine(acc, group);
+  }
+  return acc;
+}
+		 
 
 /// Filters the input list by multiplier k.
 void filterByMultiplier(const int k, const list<Ideal>& ideals,
@@ -88,73 +115,6 @@ void filterByMultiplier(const int k, const list<Ideal>& ideals,
 	  [k](const Ideal& ideal) { return ideal.k == k; });
 }
 
-/// Assume both sequences are sorted in ascending order.
-/// Returns the number of elements that needed to be added to src
-/// so that dst is a subset of src.
-template<class Iter1, class Iter2>
-int difference(Iter1 src, Iter1 srcend,
-	       Iter2 dst, Iter2 dstend,
-	       const int acc = 0) {
-  if (dst == dstend) return acc;
-  if (src == srcend) return difference(src, srcend, ++dst, dstend, acc+1);
-  if (*src > *dst) return difference(src, srcend, ++dst, dstend, acc+1);
-  if (*src < *dst) return difference(++src, srcend, dst, dstend, acc);
-  return difference(++src, srcend, ++dst, dstend, acc);
-}
-
-/// Returns the average difference between the factors of any two ideals.
-/// The idea is to assume that we know the factors of one ideal and compute
-/// how many factors we need to add to know the factorization of some
-/// other ideal.
-double avgDifference(const vector<Ideal>& group) {
-  int n = group.size();
-
-  vector<vector<StringInteger>::const_iterator> starts;
-  for (int i = 0; i < n; i++) {
-    starts.push_back(upper_bound(group[i].factors.cbegin(),
-				 group[i].factors.cend(),
-				 StringInteger(7)));
-  }
-  assert(starts.size() == group.size());
-
-  double res = 0;
-  int count = 0;
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-      if (i != j) {
-	count ++;
-	res += difference(starts[i], group[i].factors.cend(),
-			  starts[j], group[j].factors.cend());
-      }
-    }
-  }
-  assert(count == n * n - n);
-  if (count == 0) return 0;
-  return res / (n * n - n);
-}
-
-int maxDifference(const vector<Ideal>& group) {
-  int n = group.size();
-  vector<vector<StringInteger>::const_iterator> starts;
-  for (int i = 0; i < n; i++) {
-    starts.push_back(upper_bound(group[i].factors.cbegin(),
-				 group[i].factors.cend(),
-				 StringInteger(7)));
-  }
-  assert(starts.size() == group.size());
-
-  int res = 0;
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-      if (i != j) {
-	int s = difference(starts[i], group[i].factors.cend(),
-			   starts[j], group[j].factors.cend());
-	if (s > res) res = s;
-      }
-    }
-  }
-  return res;
-}
 
 /// True if 3^a, 5^b, 7^c, and 11^d are <= t for a, b, c, d occuring
 /// in the factorization of the order and if x^e has e <= 1 for all x > 11.
@@ -250,6 +210,7 @@ void runSimilarity() {
 }
 
 int main(int argc, char** argv) {
+  // Make sure the program doesn't go too crazy!
   struct rlimit l = {7*1024ULL*1024ULL*1024ULL, 7*1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
