@@ -5,6 +5,9 @@
  */
 #pragma once
 
+#include <list>
+#include <vector>
+
 #include "ideal.h"
 
 // Internal class.  Use GroupByK below instead.
@@ -86,4 +89,6 @@ class GroupByK {
   }
 };
 
+typedef GroupByK<std::vector<Ideal>, std::list<Ideal>::const_iterator>
+    ideal_list_group;
 

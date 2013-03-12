@@ -20,9 +20,6 @@
 
 using namespace std;
 
-typedef GroupByK<vector<Ideal>, list<Ideal>::const_iterator>
-    ideal_list_group;
-
 const int multipliers[] = {1, 2, 3, 5, 6, 7, 10};
 
 /// Return the ideal file associated with i-bits.
