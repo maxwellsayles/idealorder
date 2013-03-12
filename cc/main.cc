@@ -22,17 +22,6 @@ using namespace std;
 
 const int multipliers[] = {1, 2, 3, 5, 6, 7, 10};
 
-/// Return the ideal file associated with i-bits.
-string idealFilename(const int i) {
-  stringstream ss;
-  //    if (i % 8 == 0) {
-  ss << "/home/max/Desktop/masters/ideals/ideal-" << i << ".txt";
-  //    } else {
-  //  ss << "../ideals-small-sample/ideal-" << i << ".txt";
-  //    }
-  return ss.str();
-}
-
 /// Filters the input list by multiplier k.
 void filterByMultiplier(const int k, const list<Ideal>& ideals,
 			list<Ideal>& output) {
