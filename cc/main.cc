@@ -108,7 +108,7 @@ void runProbWithPower() {
   }
 }
 
-void runSimilarity() {
+void runDifference() {
   for (int i = 32; i <= 80; i += 8) {
     string filename = idealFilename(i);
     list<Ideal> ideals;
@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
   setrlimit(RLIMIT_AS, &l);
 
   //  runProbWithPower();
-  runSimilarity();
+  runDifference();
 
   return 0;
 }
