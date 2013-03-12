@@ -84,15 +84,16 @@ void group2Map(Iter iter, Iter end,
 /// The combine function takes the accumulator and
 /// a vector of ideals for each group.
 template<class R, class F, class Iter>
-R group2Foldl(Iter iter, Iter end, R z0, F combine) {
-  R acc = z0;
+void group2Foldl(Iter iter, Iter end, R& acc, F combine) {
+  //  R acc = z0;
   vector<Ideal> group;
   StringInteger last_n;
   int last_k = 0;
   for (; iter != end; ++iter) {
-    if (iter->n != last_n || iter->k != last_k) {
+    if (iter->k != last_k) {
       if (!group.empty()) {
-	acc = combine(acc, group);
+	//	acc = combine(acc, group);
+	combine(acc, group);
       }
       group.clear();
       last_n = iter->n;
@@ -101,9 +102,10 @@ R group2Foldl(Iter iter, Iter end, R z0, F combine) {
     group.push_back(*iter);
   }
   if (!group.empty()) {
-    acc = combine(acc, group);
+    //    acc = combine(acc, group);
+    combine(acc, group);
   }
-  return acc;
+  //  return acc;
 }
 		 
 
@@ -199,13 +201,25 @@ void runSimilarity() {
     list<Ideal> ideals;
     loadIdeals(filename, ideals);
 
-    list<double> results;
-    group2Map(ideals.begin(), ideals.end(), avgDifference, results);
-    cout << i << ", "
-	 << average<double>(results.begin(), results.end()) << endl;
+    //    list<double> results;
+    //    group2Map(ideals.begin(), ideals.end(), avgDifference, results);
+    //    cout << i << ", "
+    //	 << average<double>(results.begin(), results.end()) << endl;
+
     //    group2Map(ideals.begin(), ideals.end(), maxDifference, results);
     //    cout << i << ", "
     //	 << *max_element(results.begin(), results.end()) << endl;
+
+    DifferenceHistogram hist;
+    group2Foldl(ideals.begin(), ideals.end(), hist, histogramCombine);
+    cout << "i : ";
+    cout << fixed << setprecision(5);
+    for (int i = 0; i < 5; i ++) {
+      double d = static_cast<double>(hist.diff_count[i]) /
+                     static_cast<double>(hist.total);
+      cout << 100*d << ' ';
+    }
+    cout << endl;
   }
 }
 

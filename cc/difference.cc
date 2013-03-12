@@ -74,3 +74,28 @@ int maxDifference(const vector<Ideal>& group) {
   }
   return res;
 }
+
+
+DifferenceHistogram& histogramCombine(DifferenceHistogram& hist,
+				      const std::vector<Ideal>& group) {
+  int n = group.size();
+  vector<vector<StringInteger>::const_iterator> starts;
+  for (int i = 0; i < n; i++) {
+    starts.push_back(upper_bound(group[i].factors.cbegin(),
+				 group[i].factors.cend(),
+				 StringInteger(7)));
+  }
+  assert(starts.size() == group.size());
+
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      if (i != j) {
+	int s = difference(starts[i], group[i].factors.cend(),
+			   starts[j], group[j].factors.cend());
+	if (s <= 4) hist.diff_count[s]++;
+	hist.total++;
+      }
+    }
+  }
+  return hist;
+}
