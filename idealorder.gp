@@ -3,6 +3,8 @@
  * Computes two primes roughly nbits/2 in size, and their product N.
  * 
  * run with: gp -p 5000000 -q idealorder.gp
+ * and then type "main()" at the command prompt
+ * and enter the appropriate information.
  */
 
 \\primeForms = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47];
