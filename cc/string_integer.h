@@ -83,7 +83,7 @@ class StringInteger {
     int x = i[i.length() - 2];
     int y = i[i.length() - 1];
     // 2 * (x - '0') + y - '0' = 2 * x + y - 3 * '0' = 2 * x + y + '0'
-    return (2 * x + y + '0') & 3;
+    return (x + x + y + '0') & 3;
   }
 
  private:
