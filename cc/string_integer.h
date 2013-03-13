@@ -73,16 +73,17 @@ class StringInteger {
     return i;
   }
 
-  /// Compute i mod 4.  We represent i = \sum c*10^x
-  /// and 10 mod 4 = 2, so that's \sum c*2^x \pmod 4.
+  /// Compute i mod 4.
+  /// Thanks to Myles Maxfield for pointing out that 100%4 == 0.
+  /// Therefore, we only need the last two digits, n = 10x + y.
+  /// Since 10%4 = 2, we have n = (2x + y) % 4.
   int mod4() const {
-    int res = 0;
-    for (char c : i) {
-      res <<= 1;
-      res += c - '0';
-      res &= 3;
-    }
-    return res;
+    if (i == "") return 0;
+    if (i.length() == 1) return (i[0] - '0') & 3;
+    int x = i[i.length() - 2];
+    int y = i[i.length() - 1];
+    // 2 * (x - '0') + y - '0' = 2 * x + y - 3 * '0' = 2 * x + y + '0'
+    return (2 * x + y + '0') & 3;
   }
 
  private:
