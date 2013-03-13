@@ -35,6 +35,10 @@ attempts_t& combine(attempts_t& acc, const vector<Ideal>& group) {
     return acc;
   }
 
+  if (!validFactors(group[0].factors, 49)) {
+    return acc;
+  }
+
   // Assume we know the factors of the order.
   const vector<StringInteger>& factors = group[0].factors;
   int nmod4 = group[0].n.mod4();
@@ -46,8 +50,7 @@ attempts_t& combine(attempts_t& acc, const vector<Ideal>& group) {
   for (auto ideal : group) {
     assert(ideal.k == group[0].k);
     assert(ideal.n.mod4() == nmod4);
-    if (validFactors(ideal.factors, 49) &&
-	difference(factors.cbegin(), factors.cend(),
+    if (difference(factors.cbegin(), factors.cend(),
 		   ideal.factors.cbegin(),
 		   ideal.factors.cend()) == 0 &&
 	ideal.success) {
