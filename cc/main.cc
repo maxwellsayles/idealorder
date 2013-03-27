@@ -16,8 +16,8 @@ int main(int argc, char** argv) {
   struct rlimit l = {7*1024ULL*1024ULL*1024ULL, 7*1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  runPrimePowers();
-  //  runDifference();
+  //  runPrimePowers();
+  runDifference();
   //  runAttempts();
 
   return 0;

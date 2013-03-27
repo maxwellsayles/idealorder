@@ -21,6 +21,8 @@
 
 using namespace std;
 
+const int maxPrimeDiscarded = 7;
+
 /// Returns the average difference between the factors of any two ideals.
 /// The idea is to assume that we know the factors of one ideal and compute
 /// how many factors we need to add to know the factorization of some
@@ -32,7 +34,7 @@ double avgDifference(const vector<Ideal>& group) {
   for (int i = 0; i < n; i++) {
     starts.push_back(upper_bound(group[i].factors.cbegin(),
 				 group[i].factors.cend(),
-				 StringInteger(7)));
+				 StringInteger(maxPrimeDiscarded)));
   }
   assert(starts.size() == group.size());
 
@@ -60,7 +62,7 @@ int maxDifference(const vector<Ideal>& group) {
   for (int i = 0; i < n; i++) {
     starts.push_back(upper_bound(group[i].factors.cbegin(),
 				 group[i].factors.cend(),
-				 StringInteger(7)));
+				 StringInteger(maxPrimeDiscarded)));
   }
   assert(starts.size() == group.size());
 
@@ -101,7 +103,7 @@ DifferenceHistogram& histogramCombine(DifferenceHistogram& hist,
   for (int i = 0; i < n; i++) {
     starts.push_back(upper_bound(group[i].factors.cbegin(),
 				 group[i].factors.cend(),
-				 StringInteger(7)));
+				 StringInteger(maxPrimeDiscarded)));
   }
   assert(starts.size() == group.size());
 
