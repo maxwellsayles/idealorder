@@ -1,11 +1,14 @@
 #pragma once
 
+#include <algorithm>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "string_integer.h"
+
+extern const int multipliers[7];
 
 /// True if 3^a, 5^b, 7^c, and 11^d are <= t for a, b, c, d occuring
 /// in the factorization of the order and if x^e has e <= 1 for all x > 11.
@@ -25,6 +28,19 @@ inline bool validFactors(const std::vector<StringInteger>& factors,
     last = x;
   }
   return threes <= t && fives <= t && sevens <= t;
+}
+
+/// Compute the number of ideals where the factorization of its order
+/// does not violate validFactors().
+template<class R, class Iter>
+inline R idealsRatio(Iter first, Iter last, const int t) {
+  R c1 = 0;
+  R c2 = 0;
+  for (; first != last; first++) {
+    c1 ++;
+    if (validFactors(first->factors, t)) c2 ++;
+  }
+  return c2 / c1;
 }
 
 /// Compute the average over a sequence.
@@ -52,4 +68,12 @@ inline std::string smallIdealFilename(const int i) {
   ss << "/home/max/Desktop/masters/ideals-small-sample/ideal-"
      << i << ".txt";
   return ss.str();
+}
+
+/// Filters the input list by multiplier k.
+inline void filterByMultiplier(const int k, const std::list<Ideal>& ideals,
+			      std::list<Ideal>& output) {
+  output.clear();
+  std::copy_if(ideals.begin(), ideals.end(), std::back_inserter(output),
+	       [k](const Ideal& ideal) { return ideal.k == k; });
 }
