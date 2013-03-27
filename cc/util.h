@@ -33,7 +33,7 @@ inline bool validFactors(const std::vector<StringInteger>& factors,
 /// Compute the number of ideals where the factorization of its order
 /// does not violate validFactors().
 template<class R, class Iter>
-inline R idealsRatio(Iter first, Iter last, const int t) {
+inline R validIdealFactorsRatio(Iter first, Iter last, const int t) {
   R c1 = 0;
   R c2 = 0;
   for (; first != last; first++) {
