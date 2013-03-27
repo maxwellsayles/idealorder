@@ -47,6 +47,12 @@ istream& operator>>(istream& stream, Ideal& ideal) {
 void loadIdeals(const string& filename, list<Ideal>& ideals) {
   ideals.clear();
   ifstream f(filename);
+  if (!f) {
+    cout << "Failed to open \"" << filename << "\"." << endl;
+    cout << "You probably need to generate the appropriate data files using idealorder.gp," << endl;
+    cout << "and then modify util.h so that the correct path is generated." << endl;
+    exit(-1);
+  }
   Ideal ideal;
   while (f >> ideal) {
     ideals.push_back(ideal);

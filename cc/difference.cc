@@ -1,6 +1,13 @@
+/**
+ * Fix the number of bits.
+ * For each pair of ideal classes, assume h=ord(a) is known and count
+ * the number of prime factors of h'=ord(b^h).  If h'=1 then the number
+ * of prime factors is 0.  Build a histogram of this.
+ */
 #include "difference.h"
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -112,6 +119,9 @@ DifferenceHistogram& histogramCombine(DifferenceHistogram& hist,
 }
 
 void runDifference() {
+  ofstream out("difference.dat");
+  out << fixed << setprecision(5);
+  cout << fixed << setprecision(5);
   for (int i = 32; i <= 80; i += 8) {
     string filename = bigIdealFilename(i);
     list<Ideal> ideals;
@@ -121,13 +131,15 @@ void runDifference() {
     ideal_list_group group(ideals.cbegin(), ideals.cend());
     hist = accumulate(group.cbegin(), group.cend(),
 		      hist, histogramCombine);
-    cout << i << " : ";
-    cout << fixed << setprecision(5);
+    cout << i << " :";
+    out << i;
     for (int i = 0; i < 5; i ++) {
       double d = static_cast<double>(hist.diff_count[i]) /
                      static_cast<double>(hist.total);
-      cout << 100*d << ' ';
+      cout << ' ' << 100*d;
+      out << ", " << d;
     }
     cout << endl;
+    out << endl;
   }
 }

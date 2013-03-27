@@ -16,4 +16,7 @@ plot 'attempts.dat' using 1:3 with lines title '1n', \
      '' using 1:9 with lines title '5n', \
      '' using 1:11 with lines title '6n', \
      '' using 1:13 with lines title '7n', \
-     '' using 1:15 with lines title '10n'     
+     '' using 1:15 with lines title '10n'
+
+set output 'difference.png'
+plot 'difference.dat' using 1:2 with lines

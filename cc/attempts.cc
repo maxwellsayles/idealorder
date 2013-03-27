@@ -1,3 +1,14 @@
+/**
+ * Fix the number of bits.
+ * Then separate n (mod 4) and multipliers k.
+ * Assume the order of the first ideal class is known,
+ * and compute the number of ideal classes tried
+ * before a successful factorization.
+ *
+ * This shows that ideal classes associated with some multipliers
+ * are more likely to lead to a factorization.
+ */
+
 #include <algorithm>
 #include <array>
 #include <fstream>
