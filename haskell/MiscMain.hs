@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import qualified Data.IntMap as IntMap
 import Data.Function
 import Data.List
-import qualified Data.Map as Map
+import qualified Data.Map.Lazy as Map
 import Data.Maybe
 import qualified Data.Set as Set
 import qualified IdealInfo as IdealInfo
@@ -194,24 +194,65 @@ main = do
 
 percentile i xs = let l = length xs
                   in  xs !! (l * i `div` 100)
-
-moreThan1 :: [Int] -> Double
-moreThan1 xs = let l = length xs
-                   l' = length $ takeWhile (<=1) xs
-               in  (fromIntegral l') / (fromIntegral l)
-
+{-
 main = do
+  let moreThan :: Int -> [Int] -> Double
+      moreThan i xs = let l = length xs
+                          l' = length $ takeWhile (<=i) xs
+                      in  (fromIntegral l') / (fromIntegral l)
+
   let process :: Int -> IO ()
       process i = do
          putStrLn $ "Processing " ++ show i
          let filename = printf "/home/max/Desktop/masters/ideals/ideal-%d.txt" i
          ideals <- IdealInfo.readIdeals filename
 --         print $ percentile 95 $ sort $
-         print $ moreThan1 $ sort $
+         print $ moreThan 2 $ sort $
                map (length .
-                    takeWhile (==11) .
-                    dropWhile (<11) .
+                    takeWhile (==7) .
+                    dropWhile (<7) .
                     IdealInfo.factors) $
                ideals
          putStrLn ""
+
+  mapM_ process [32,40..80]
+-}
+
+main = do
+  let moreThan :: Int -> [Int] -> Double
+      moreThan i xs = let l = length xs
+                          l' = length $ takeWhile (<=i) xs
+                      in  (fromIntegral l') / (fromIntegral l)
+
+  let process :: Int -> IO ()
+      process i = do
+         putStrLn $ "Processing " ++ show i
+         let filename = printf "/home/max/Desktop/masters/ideals/ideal-%d.txt" i
+         ideals <- map IdealInfo.factors <$> IdealInfo.readIdeals filename
+
+         let combine res          []             = res
+             combine (total, acc) (ideal:ideals) =
+                 let acc' = 
+--                         foldl' (flip
+--                                 (Map.alter (\x -> succ <$> x <|>
+--                                                   pure (1::Int))))
+--                               acc .
+                         flip (Map.alter (\x -> succ <$> x <|>
+                                                pure (1::Int)))
+                              acc .
+                         length .
+                         map (head &&& length) .
+                         group .
+                         takeWhile (<= 11) .
+                         dropWhile (< 3) .
+                         map (fromInteger :: Integer -> Int) $
+                         ideal
+                     total' = total + 1
+                 in total' `seq` combine (total', acc') ideals
+
+         let (total, hist) = combine (0, Map.empty) ideals
+         let total' = fromIntegral total
+         print $ Map.map (\x -> fromIntegral x / total') hist
+         putStrLn ""
+
   mapM_ process [32,40..80]
