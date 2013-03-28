@@ -194,30 +194,44 @@ main = do
 
 percentile i xs = let l = length xs
                   in  xs !! (l * i `div` 100)
-{-
+
 main = do
-  let moreThan :: Int -> [Int] -> Double
-      moreThan i xs = let l = length xs
-                          l' = length $ takeWhile (<=i) xs
-                      in  (fromIntegral l') / (fromIntegral l)
+  let probLe :: Int -> [Int] -> Double
+      probLe i xs = let l = length xs
+                        l' = length $ takeWhile (<= i) xs
+                    in  (fromIntegral l') / (fromIntegral l)
 
-  let process :: Int -> IO ()
-      process i = do
-         putStrLn $ "Processing " ++ show i
-         let filename = printf "/home/max/Desktop/masters/ideals/ideal-%d.txt" i
-         ideals <- IdealInfo.readIdeals filename
---         print $ percentile 95 $ sort $
-         print $ moreThan 2 $ sort $
-               map (length .
-                    takeWhile (==7) .
-                    dropWhile (<7) .
-                    IdealInfo.factors) $
-               ideals
-         putStrLn ""
+  let processFile :: Int -> IO ()
+      processFile i = do
+         printf "Processing: i=%d\n" i
+         let filename =
+                 printf "/home/max/Desktop/masters/ideals/ideal-%d.txt" i
+         
+         let processPrime :: Integer -> IO (Int, Double)
+             processPrime p =
+                 do ideals <- IdealInfo.readIdeals filename
+                    let vs = sort .
+                             map (length .
+                                  takeWhile (== p) .
+                                  dropWhile (< p) .
+                                  IdealInfo.factors) $
+                             ideals
+                    let x = percentile 99 vs
+                    let y = probLe x vs
+                    printf "p=%d, %d gives %.5f probability\n\n" p x y
+                    return (x, y)
+                           
+         rows <- mapM processPrime [3, 5, 7, 11, 13, 17]
+         appendFile "99-percentile.dat" .
+                    (\s -> show i ++ ", " ++ s ++ "\n") .
+                    intercalate ", " .
+                    map (\(x, y) -> printf "%d, %.5f" x y) $
+                    rows
 
-  mapM_ process [32,40..80]
--}
+  mapM_ processFile [32, 40 .. 80]
 
+
+{-
 main = do
   let moreThan :: Int -> [Int] -> Double
       moreThan i xs = let l = length xs
@@ -256,3 +270,4 @@ main = do
          putStrLn ""
 
   mapM_ process [32,40..80]
+-}
