@@ -14,8 +14,9 @@ import qualified IdealInfo as IdealInfo
 import Mining
 import qualified Primes as Primes
 import Stats
-import qualified System as System
+import qualified System.Environment as System
 import System.CPUTime
+import Text.Printf
 
 {--
 main =
@@ -171,7 +172,20 @@ main =
               putStrLn ""
 -}
 
-
+{-
 main = do
   ideals <- IdealInfo.readIdeals "/home/max/Desktop/ideals/ideal-32.txt"
   print $ length $ show $ nubSorted $ sort ideals
+-}
+
+main = do
+  let process :: Int -> IO ()
+      process i = do
+         putStrLn $ "Processing " ++ show i
+         let filename = printf "/home/max/Desktop/masters/ideals/ideal-%d.txt" i
+         ideals <- IdealInfo.readIdeals filename
+         print $ length $
+               filter ((>1) . length . filter (==11) . IdealInfo.factors) $
+               ideals
+         putStrLn ""
+  mapM_ process [32,40..80]
