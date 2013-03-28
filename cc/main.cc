@@ -6,6 +6,7 @@
 #include "difference.h"
 #include "group_by_k.h"
 #include "prime_powers.h"
+#include "reusable.h"
 #include "string_integer.h"
 #include "util.h"
 
@@ -16,8 +17,9 @@ int main(int argc, char** argv) {
   struct rlimit l = {7*1024ULL*1024ULL*1024ULL, 7*1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  runPrimePowers();
+  //  runPrimePowers();
   //  runDifference();
+  runReusable();
   //  runAttempts();
 
   return 0;

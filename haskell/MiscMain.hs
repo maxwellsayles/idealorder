@@ -178,6 +178,7 @@ main = do
   print $ length $ show $ nubSorted $ sort ideals
 -}
 
+{-
 main = do
   let process :: Int -> IO ()
       process i = do
@@ -186,6 +187,31 @@ main = do
          ideals <- IdealInfo.readIdeals filename
          print $ length $
                filter ((>1) . length . filter (==11) . IdealInfo.factors) $
+               ideals
+         putStrLn ""
+  mapM_ process [32,40..80]
+-}
+
+percentile i xs = let l = length xs
+                  in  xs !! (l * i `div` 100)
+
+moreThan1 :: [Int] -> Double
+moreThan1 xs = let l = length xs
+                   l' = length $ takeWhile (<=1) xs
+               in  (fromIntegral l') / (fromIntegral l)
+
+main = do
+  let process :: Int -> IO ()
+      process i = do
+         putStrLn $ "Processing " ++ show i
+         let filename = printf "/home/max/Desktop/masters/ideals/ideal-%d.txt" i
+         ideals <- IdealInfo.readIdeals filename
+--         print $ percentile 95 $ sort $
+         print $ moreThan1 $ sort $
+               map (length .
+                    takeWhile (==11) .
+                    dropWhile (<11) .
+                    IdealInfo.factors) $
                ideals
          putStrLn ""
   mapM_ process [32,40..80]
