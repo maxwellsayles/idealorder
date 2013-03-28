@@ -10,8 +10,9 @@
 
 extern const int multipliers[7];
 
-/// True if 3^a, 5^b, 7^c, and 11^d are <= t for a, b, c, d occuring
-/// in the factorization of the order and if x^e has e <= 1 for all x > 11.
+/// True if the factorization of the order is such that
+/// 3^a, 5^b, 7^c, and 11^d are <= t,
+/// 2^e is unbound, and p^e has e == 1 for all p > 11.
 inline bool validFactors(const std::vector<StringInteger>& factors,
 			 const int t) {
   int threes = 1;
@@ -27,7 +28,7 @@ inline bool validFactors(const std::vector<StringInteger>& factors,
     else if (x != 2 && x == last) return false;
     last = x;
   }
-  return threes <= t && fives <= t && sevens <= t;
+  return threes <= t && fives <= t && sevens <= t && elevens <= t;
 }
 
 /// Compute the number of ideals where the factorization of its order

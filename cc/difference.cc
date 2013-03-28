@@ -21,7 +21,7 @@
 
 using namespace std;
 
-const int maxPrimeDiscarded = 7;
+const int maxPrimeDiscarded = 11;
 
 /// Returns the average difference between the factors of any two ideals.
 /// The idea is to assume that we know the factors of one ideal and compute
